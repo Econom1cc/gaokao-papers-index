@@ -38,11 +38,15 @@ FIELDS = [
 ]
 
 
-def relative_link(target: Path, from_dir: Path, label: str) -> str:
-    if not target.exists():
+def relative_path(target: Path, from_dir: Path) -> str:
+    if not target or not target.exists():
         return ""
-    relative = os.path.relpath(target, from_dir).replace(os.sep, "/")
-    return f"[{label}]({relative})"
+    return os.path.relpath(target, from_dir).replace(os.sep, "/")
+
+
+def relative_link(target: Path, from_dir: Path, label: str) -> str:
+    relative = relative_path(target, from_dir)
+    return f"[{label}]({relative})" if relative else ""
 
 
 def record_key(row: dict[str, str], coverage_type: str) -> str:
@@ -129,10 +133,41 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
         writer.writeheader()
         for row in rows:
             output = {field: row.get(field, "") for field in FIELDS}
-            output["试卷路径"] = relative_link(Path(row["_pdf"]), path.parent, "打开试卷")
-            output["Markdown路径"] = relative_link(Path(row["_md"]), path.parent, "打开Markdown")
-            output["听力路径"] = relative_link(Path(row["_mp3"]), path.parent, "打开听力")
+            output["试卷路径"] = relative_path(Path(row["_pdf"]), path.parent)
+            output["Markdown路径"] = relative_path(Path(row["_md"]), path.parent)
+            output["听力路径"] = relative_path(Path(row["_mp3"]), path.parent)
             writer.writerow(output)
+
+
+def markdown_cell(value: object) -> str:
+    return str(value).replace("|", "\\|").replace("\n", " ").strip()
+
+
+def write_markdown_index(path: Path, rows: list[dict[str, str]], title: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    status_label = {"done": "完整", "pdf_only": "待OCR", "missing": "缺失"}
+    lines = [
+        f"# {title}",
+        "",
+        f"> 共 {len(rows)} 条覆盖记录。点击“试卷”“OCR”“听力”进入仓库文件。",
+        "",
+        "| 年份 | 科目 | 地区 | 高考模式 | 卷型 | 状态 | 试卷 | OCR | 听力 | 识别方式 |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for row in rows:
+        lines.append("| " + " | ".join([
+            markdown_cell(row["年份"]),
+            markdown_cell(row["科目"]),
+            markdown_cell(row["地区"]),
+            markdown_cell(row["高考模式"]),
+            markdown_cell(row["卷型"]),
+            markdown_cell(status_label.get(row["状态"], row["状态"])),
+            relative_link(Path(row["_pdf"]), path.parent, "PDF") or "-",
+            relative_link(Path(row["_md"]), path.parent, "Markdown") or "-",
+            relative_link(Path(row["_mp3"]), path.parent, "MP3") or "-",
+            markdown_cell(row["OCR方式"]) or "-",
+        ]) + " |")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main() -> int:
@@ -140,7 +175,9 @@ def main() -> int:
     rows.sort(key=lambda row: (
         int(row["年份"]), list(SUBJECT_SLUG).index(row["科目"]), list(REGION_SLUG).index(row["地区"])
     ))
+
     write_csv(ROOT / "indexes" / "catalog.csv", rows)
+    write_markdown_index(ROOT / "indexes" / "catalog.md", rows, "2008-2026 全国高考试卷总索引")
 
     partitions = [
         ("科目", SUBJECT_SLUG, ROOT / "indexes" / "by-subject"),
@@ -148,18 +185,24 @@ def main() -> int:
     ]
     for field, mapping, directory in partitions:
         for key, slug in mapping.items():
-            write_csv(directory / f"{slug}.csv", [row for row in rows if row[field] == key])
+            part = [row for row in rows if row[field] == key]
+            write_csv(directory / f"{slug}.csv", part)
+            write_markdown_index(directory / f"{slug}.md", part, f"{key}高考试卷索引")
     for year in range(2008, 2027):
-        write_csv(ROOT / "indexes" / "by-year" / f"{year}.csv", [row for row in rows if row["年份"] == str(year)])
+        part = [row for row in rows if row["年份"] == str(year)]
+        write_csv(ROOT / "indexes" / "by-year" / f"{year}.csv", part)
+        write_markdown_index(ROOT / "indexes" / "by-year" / f"{year}.md", part, f"{year} 年高考试卷索引")
     for mode, slug in [("老高考", "old-gaokao"), ("新高考", "new-gaokao")]:
-        write_csv(ROOT / "indexes" / "by-exam-system" / f"{slug}.csv", [row for row in rows if row["高考模式"] == mode])
+        part = [row for row in rows if row["高考模式"] == mode]
+        write_csv(ROOT / "indexes" / "by-exam-system" / f"{slug}.csv", part)
+        write_markdown_index(ROOT / "indexes" / "by-exam-system" / f"{slug}.md", part, f"{mode}试卷索引")
 
     json_rows = []
     for row in rows:
         item = {field: row.get(field, "") for field in FIELDS}
-        item["试卷路径"] = Path(row["_pdf"]).relative_to(ROOT).as_posix() if row["_pdf"] and Path(row["_pdf"]).exists() else ""
-        item["Markdown路径"] = Path(row["_md"]).relative_to(ROOT).as_posix() if row["_md"] and Path(row["_md"]).exists() else ""
-        item["听力路径"] = Path(row["_mp3"]).relative_to(ROOT).as_posix() if row["_mp3"] and Path(row["_mp3"]).exists() else ""
+        item["试卷路径"] = relative_path(Path(row["_pdf"]), ROOT)
+        item["Markdown路径"] = relative_path(Path(row["_md"]), ROOT)
+        item["听力路径"] = relative_path(Path(row["_mp3"]), ROOT)
         json_rows.append(item)
     (ROOT / "indexes" / "catalog.jsonl").write_text(
         "\n".join(json.dumps(row, ensure_ascii=False) for row in json_rows) + "\n", encoding="utf-8"
@@ -176,20 +219,29 @@ def main() -> int:
 
     navigation = [
         "# 高考索引导航", "",
-        "所有 CSV 的本地来源路径已移除；`试卷路径`、`Markdown路径`、`听力路径` 均为仓库内相对链接。", "",
-        "## 总索引", "",
-        "- [完整总索引](catalog.csv)", "- [JSON Lines 索引](catalog.jsonl)", "",
-        "## 按科目", "",
+        "Markdown 索引可以直接点击进入试卷、OCR Markdown 和听力文件；CSV 作为数据导出，不再承载链接语法。", "",
+        "## 可点击索引", "",
+        "- [完整总索引](catalog.md)", "",
+        "### 按科目", "",
     ]
     for subject, slug in SUBJECT_SLUG.items():
-        navigation.append(f"- [{subject}](by-subject/{slug}.csv)")
-    navigation.extend(["", "## 按地区", ""])
+        navigation.append(f"- [{subject}](by-subject/{slug}.md)")
+    navigation.extend(["", "### 按地区", ""])
     for region, slug in REGION_SLUG.items():
-        navigation.append(f"- [{region}](by-region/{slug}.csv)")
-    navigation.extend(["", "## 按年份", ""])
+        navigation.append(f"- [{region}](by-region/{slug}.md)")
+    navigation.extend(["", "### 按年份", ""])
     for year in range(2008, 2027):
-        navigation.append(f"- [{year}](by-year/{year}.csv)")
-    navigation.extend(["", "## 按新老高考", "", "- [老高考](by-exam-system/old-gaokao.csv)", "- [新高考](by-exam-system/new-gaokao.csv)", ""])
+        navigation.append(f"- [{year}](by-year/{year}.md)")
+    navigation.extend([
+        "", "### 按新老高考", "",
+        "- [老高考](by-exam-system/old-gaokao.md)",
+        "- [新高考](by-exam-system/new-gaokao.md)",
+        "", "## 数据导出", "",
+        "- [完整 CSV](catalog.csv)",
+        "- [JSON Lines](catalog.jsonl)",
+        "- [层级 JSON](hierarchy.json)",
+        "",
+    ])
     (ROOT / "indexes" / "README.md").write_text("\n".join(navigation), encoding="utf-8")
 
     readme_path = ROOT / "README.md"
@@ -197,7 +249,7 @@ def main() -> int:
     start = readme.find("## 索引入口")
     end = readme.find("## 目录规范", start)
     if start >= 0 and end > start:
-        readme = readme[:start] + "## 索引入口\n\n- [索引总导航](indexes/README.md)\n\n" + readme[end:]
+        readme = readme[:start] + "## 索引入口\n\n- [可点击索引总导航](indexes/README.md)\n\n" + readme[end:]
     readme_path.write_text(readme, encoding="utf-8")
     print(json.dumps({"rows": len(rows), "done": sum(row["状态"] == "done" for row in rows)}, ensure_ascii=False))
     return 0

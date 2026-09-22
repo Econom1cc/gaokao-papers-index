@@ -29,12 +29,7 @@
 
 ## 索引入口
 
-- [总索引](indexes/catalog.csv)
-- [按科目](indexes/by-subject/)
-- [按地区](indexes/by-region/)
-- [按年份](indexes/by-year/)
-- [按新老高考](indexes/by-exam-system/)
-- [层级 JSON](indexes/hierarchy.json)
+- [索引总导航](indexes/README.md)
 
 ## 目录规范
 

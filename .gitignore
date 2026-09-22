@@ -1,3 +1,4 @@
 *.tmp
 *.qkdownloading
 .DS_Store
+.ocr-progress.json

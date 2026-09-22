@@ -4,3 +4,4 @@
 - [九科缺失审计](missing-audit.md)
 - [命名规范](naming.md)
 - [Repo 结构](repo_layout.md)
+- [四川数学近年变化趋势](sichuan-math-trends.md)

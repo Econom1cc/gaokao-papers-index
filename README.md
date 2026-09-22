@@ -14,6 +14,7 @@
 ## 说明文档
 
 - [各地区卷型变迁](docs/region-paper-type-history.md)：按地区说明新老高考切换、语数外卷型、文综理综或选考卷型，并附依据。
+- [四川数学近年变化趋势](docs/sichuan-math-trends.md)：按四川四阶段卷型分析题量、知识块和压轴题变化，并以浙江卷作先行对照。
 - [九科缺失审计](docs/missing-audit.md)：单独统计覆盖、缺失、占位、缺失率和缺口分布。
 - [统一命名规范](docs/naming.md)
 - [Repo 结构说明](docs/repo_layout.md)

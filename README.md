@@ -21,6 +21,8 @@
 - [按年份](indexes/by-year/)
 - [按新老高考](indexes/by-exam-system/)
 - [层级 JSON](indexes/hierarchy.json)
+- [各地区卷型变迁说明](docs/region-paper-type-history.md)
+- [各地区卷型变迁说明](docs/region-paper-type-history.md)
 
 ## 目录规范
 

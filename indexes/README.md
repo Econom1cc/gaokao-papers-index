@@ -11,3 +11,7 @@
 - `hierarchy.json`：按科目/地区/年份/高考模式嵌套。
 
 每条记录都带有年份、科目、地区、高考模式、改革起始年、卷别性质、覆盖状态、源文件和规范化 Repo 路径。
+
+- [各地区卷型变迁说明](../docs/region-paper-type-history.md)
+
+- [各地区卷型变迁说明](../docs/region-paper-type-history.md)

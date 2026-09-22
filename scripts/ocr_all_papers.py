@@ -82,6 +82,9 @@ def normalize_paper_type(paper_type: str, subject: str, exam_mode: str) -> str:
 
 def canonical_paper_type(year: str, paper_type: str) -> str:
     value = paper_type.replace("III", "Ⅲ").replace("II", "Ⅱ").replace("I", "Ⅰ")
+    new_match = re.fullmatch(r"新高考(?:全国)?([ⅠⅡ])卷", value)
+    if new_match:
+        return f"新高考全国{new_match.group(1)}卷"
     match = re.fullmatch(r"(?:新高考|新课标)?全国([ⅠⅡ])卷", value)
     if not match:
         return value

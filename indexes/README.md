@@ -1,8 +1,8 @@
 # 高考索引导航
 
-Markdown 索引可以直接点击进入试卷、OCR Markdown 和听力文件；CSV 作为数据导出，不承载链接语法。
+Markdown 索引可以直接点击进入试卷、OCR Markdown 和听力文件；CSV 作为数据导出，不再承载链接语法。
 
-## 总索引
+## 可点击索引
 
 - [完整总索引](catalog.md)
 

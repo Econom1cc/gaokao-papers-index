@@ -1,0 +1,23 @@
+{
+  "fields": [
+    "年份",
+    "科目",
+    "地区",
+    "状态",
+    "范围",
+    "卷型",
+    "来源文件",
+    "建议Repo路径",
+    "文件数"
+  ],
+  "status": [
+    "present_local",
+    "present_common",
+    "covered_common",
+    "archive",
+    "analysis_only",
+    "placeholder",
+    "missing",
+    "other"
+  ]
+}

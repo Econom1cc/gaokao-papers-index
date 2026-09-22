@@ -38,13 +38,16 @@ FIELDS = [
 ]
 
 
-def relative_path(target: Path, from_dir: Path) -> str:
-    if not target or not target.exists():
+def relative_path(target: Path | str, from_dir: Path) -> str:
+    if target is None or not str(target).strip():
         return ""
-    return os.path.relpath(target, from_dir).replace(os.sep, "/")
+    path = Path(target)
+    if not path.exists() or not path.is_file():
+        return ""
+    return os.path.relpath(path, from_dir).replace(os.sep, "/")
 
 
-def relative_link(target: Path, from_dir: Path, label: str) -> str:
+def relative_link(target: Path | str, from_dir: Path, label: str) -> str:
     relative = relative_path(target, from_dir)
     return f"[{label}]({relative})" if relative else ""
 

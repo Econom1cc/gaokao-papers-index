@@ -36,6 +36,12 @@ YYYY_科目_地区或卷型_材料类型_版本.ext
 
 通用全国卷只保留在 `全国` 目录，省份覆盖通过 `data/coverage_matrix.csv` 映射。
 
+## 存储格式
+
+- 常规科目：`PDF + md`
+- 英语科目：`PDF + md + mp3`，其中 MP3 为听力音频；没有独立听力音频时只保留 `PDF + md`
+
+
 ## 数据文件
 
 - `data/coverage_matrix.csv`：年份 × 科目 × 地区覆盖矩阵。

@@ -20,7 +20,7 @@
 
 ## 索引入口
 
-- [可点击索引总导航](indexes/README.md)
+- [索引](indexes/README.md)
 
 ## 目录规范
 

@@ -57,7 +57,7 @@ papers/<年份>/<科目>/<地区或全国>/<卷型>/<文件>
 
 ## 索引入口
 
-- [可点击总索引](../indexes/README.md)
+- [总索引](../indexes/README.md)
 - [完整 Markdown 索引](../indexes/catalog.md)
 - [完整 CSV 数据](../indexes/catalog.csv)
 - [覆盖矩阵](../data/coverage_matrix.csv)

@@ -218,23 +218,35 @@ def extract_pdf(pdf: Path, engine_holder: list[object | None]) -> tuple[list[dic
         return native_pages, "pypdf"
 
     if engine_holder[0] is None:
+        dml_pkgs = os.environ.get("CODEX_DML_PKGS")
+        if dml_pkgs and Path(dml_pkgs).exists():
+            sys.path.insert(0, dml_pkgs)
         try:
             from rapidocr_onnxruntime import RapidOCR
         except ImportError:
             extra = os.environ.get("CODEX_OCR_PKGS")
             if extra:
                 sys.path.insert(0, extra)
+            if dml_pkgs and Path(dml_pkgs).exists():
+                sys.path.insert(0, dml_pkgs)
             from rapidocr_onnxruntime import RapidOCR
         threads = max(1, int(os.environ.get("OCR_INTRA_THREADS", "1")))
         det_side = max(480, int(os.environ.get("OCR_DET_SIDE", "736")))
         rec_batch = max(1, int(os.environ.get("OCR_REC_BATCH", "6")))
+        use_dml = os.environ.get("OCR_USE_DML", "").lower() in {"1", "true", "yes"}
         engine_holder[0] = RapidOCR(
             intra_op_num_threads=threads,
             inter_op_num_threads=1,
             use_cls=False,
             det_limit_side_len=det_side,
             rec_batch_num=rec_batch,
+            det_use_dml=use_dml,
+            rec_use_dml=use_dml,
         )
+        if os.environ.get("OCR_DEBUG_PROVIDERS") == "1":
+            det_providers = engine_holder[0].text_det.infer.session.get_providers()
+            rec_providers = engine_holder[0].text_rec.session.session.get_providers()
+            print(f"OCR_PROVIDERS det={det_providers} rec={rec_providers}", flush=True)
     from pdf2image import convert_from_path
     import numpy as np
 
@@ -300,9 +312,7 @@ def load_progress(path: Path) -> dict[str, dict[str, object]]:
 
 def save_progress(path: Path, progress: dict[str, dict[str, object]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(list(progress.values()), ensure_ascii=False, indent=2), encoding="utf-8")
-    os.replace(tmp, path)
+    path.write_text(json.dumps(list(progress.values()), ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def write_manifest(path: Path, records: list[dict[str, object]], progress: dict[str, dict[str, object]]) -> None:
@@ -475,7 +485,7 @@ def main() -> int:
             }
         save_progress(args.progress, progress)
         elapsed = time.time() - started
-        if total_changed <= 10 or total_changed % 25 == 0 or failed:
+        if total_changed <= 10 or total_changed % 5 == 0 or failed:
             state = progress[key]["status"]
             print(f"[{index}/{len(records)}] {record['year']} {record['subject']} {record['area']} {record['paper_type']} | {state} | {progress[key].get('ocr_method','')} | {elapsed:.1f}s", flush=True)
         if args.limit and total_changed >= args.limit:

@@ -223,7 +223,7 @@ def main() -> int:
     navigation = [
         "# 高考索引导航", "",
         "Markdown 索引可以直接点击进入试卷、OCR Markdown 和听力文件；CSV 作为数据导出，不再承载链接语法。", "",
-        "## 可点击索引", "",
+        "## 总索引", "",
         "- [完整总索引](catalog.md)", "",
         "### 按科目", "",
     ]
@@ -247,13 +247,6 @@ def main() -> int:
     ])
     (ROOT / "indexes" / "README.md").write_text("\n".join(navigation), encoding="utf-8")
 
-    readme_path = ROOT / "README.md"
-    readme = readme_path.read_text(encoding="utf-8")
-    start = readme.find("## 索引入口")
-    end = readme.find("## 目录规范", start)
-    if start >= 0 and end > start:
-        readme = readme[:start] + "## 索引入口\n\n- [可点击索引总导航](indexes/README.md)\n\n" + readme[end:]
-    readme_path.write_text(readme, encoding="utf-8")
     print(json.dumps({"rows": len(rows), "done": sum(row["状态"] == "done" for row in rows)}, ensure_ascii=False))
     return 0
 

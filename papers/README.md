@@ -6,11 +6,11 @@
 
 - 唯一试卷：2,662 套
 - 原卷 PDF：2,662 份
-- OCR Markdown：2,503 份
+- OCR Markdown：2,662 份
 - 英语听力 MP3：164 份
 - 当前文件体积：约 4.45 GiB
 
-部分长扫描卷的 OCR Markdown 仍在补全，但对应原卷 PDF 已保存在仓库中。实际状态以 [覆盖矩阵](../data/coverage_matrix.csv) 和各索引页面为准。
+PDF 原卷与 OCR Markdown 已全部生成；英语存在独立听力音频时另存 MP3。实际状态以 [全量清单](../data/full_paper_manifest.csv)、[覆盖矩阵](../data/coverage_matrix.csv) 和各索引页面为准。
 
 ## 存储结构
 
